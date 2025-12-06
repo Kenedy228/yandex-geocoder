@@ -25,7 +25,7 @@ type Response struct {
 							Precision string `json:"precision"`
 							Kind      string `json:"kind"`
 							Text      string `json:"text"`
-							Address struct {
+							Address   struct {
 								CountryCode string `json:"country_code"`
 								Formatted   string `json:"formatted"`
 								PostalCode  string `json:"postal_code,omitempty"`
@@ -92,38 +92,31 @@ const (
 	TypeOther
 )
 
-func (r *Response) Coordinates() ([]*Coordinates, error) {
-	geoObjects := r.Response.GeoObjectCollection.
-		FeatureMember
-	coords := []*Coordinates{}
+func (r *Response) Coordinates() (*Coordinates, error) {
+	pos := r.Response.GeoObjectCollection.
+		FeatureMember[0].
+		GeoObject.
+		Point.
+		Pos
 
-	for _, geo := range geoObjects {
-		pos := geo.GeoObject.Point.Pos
+	splitted := strings.Split(pos, " ")
 
-		splitted := strings.Split(pos, " ")
+	long, err := strconv.ParseFloat(splitted[0], 64)
 
-		long, err := strconv.ParseFloat(splitted[0], 64)
-
-		if err != nil {
-			return nil, err 
-		}
-
-		lat, err := strconv.ParseFloat(splitted[1], 64)
-
-		if err != nil {
-			return nil, err 
-		}
-
-		coords = append(coords, &Coordinates{
-			Latitude:  lat,
-			Longitude: long,
-		})
+	if err != nil {
+		return nil, err
 	}
 
-	return coords, nil
+	lat, err := strconv.ParseFloat(splitted[1], 64)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Coordinates{Latitude: lat, Longitude: long}, nil
 }
 
-func (r *Response) GetPrecision() Precision {
+func (r *Response) Precision() Precision {
 	precision := r.Response.GeoObjectCollection.
 		FeatureMember[0].
 		GeoObject.
@@ -147,7 +140,7 @@ func (r *Response) GetPrecision() Precision {
 	}
 }
 
-func (r *Response) GetDataType() DataType {
+func (r *Response) DataType() DataType {
 	kind := r.Response.GeoObjectCollection.
 		FeatureMember[0].
 		GeoObject.

@@ -2,7 +2,9 @@ package geocoder
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type Client struct {
@@ -13,24 +15,30 @@ func NewClient() *Client {
 }
 
 func (client *Client) Search(params *SearchParams) (*Response, error) {
-	url := params.encode() 
+	url := fmt.Sprintf("%s?apikey=%s&geocode=%s&format=%s&lang=%s&results=%s",
+		baseURL,
+		url.QueryEscape(params.ApiKey),
+		url.QueryEscape(params.Geocode),
+		url.QueryEscape(format),
+		url.QueryEscape(language),
+		url.QueryEscape(count))
 
 	resp, err := http.Get(url)
 
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, err 
+		return nil, err
 	}
 
 	decoder := json.NewDecoder(resp.Body)
 	var data Response
 
 	if err := decoder.Decode(&data); err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	return &data, nil
