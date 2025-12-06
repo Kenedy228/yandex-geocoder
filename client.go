@@ -6,10 +6,9 @@ import (
 )
 
 type Client struct {
-
 }
 
-func NewClient(apiKey string) *Client {
+func NewClient() *Client {
 	return &Client{}
 }
 
