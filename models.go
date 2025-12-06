@@ -59,55 +59,16 @@ type Coordinates struct {
 	Latitude  float64
 }
 
-type Precision int
-
-const (
-	PrecisionExact Precision = iota
-	PrecisionNumber
-	PrecisionNear
-	PrecisionRange
-	PrecisionStreet
-	PrecisionOther
-)
-
-type DataType int
-
-const (
-	TypeHouse DataType = iota
-	TypeStreet
-	TypeMetro
-	TypeDistrict
-	TypeLocality
-	TypeArea
-	TypeProvince
-	TypeCountry
-	TypeRegion
-	TypeHydro
-	TypeRailwayStation
-	TypeStation
-	TypeRoute
-	TypeVegetation
-	TypeAirport
-	TypeEntrance
-	TypeOther
-)
-
 func (r *Response) Coordinates() (*Coordinates, error) {
-	pos := r.Response.GeoObjectCollection.
-		FeatureMember[0].
-		GeoObject.
-		Point.
-		Pos
+	split := strings.Split(r.pos(), " ")
 
-	splitted := strings.Split(pos, " ")
-
-	long, err := strconv.ParseFloat(splitted[0], 64)
+	long, err := strconv.ParseFloat(split[0], 64)
 
 	if err != nil {
 		return nil, err
 	}
 
-	lat, err := strconv.ParseFloat(splitted[1], 64)
+	lat, err := strconv.ParseFloat(split[1], 64)
 
 	if err != nil {
 		return nil, err
@@ -116,72 +77,65 @@ func (r *Response) Coordinates() (*Coordinates, error) {
 	return &Coordinates{Latitude: lat, Longitude: long}, nil
 }
 
-func (r *Response) Precision() Precision {
-	precision := r.Response.GeoObjectCollection.
+func (r *Response) IsPrecised() bool {
+	if r.precision() != "exact" || r.kind() != "house" {
+		return false
+	}
+
+	if r.suggestion() != "" {
+		return false
+	}
+
+	return true
+}
+
+func (r *Response) FormattedAddress() string {
+	if r.precision() != "exact" || r.kind() != "house" {
+		return ""
+	}
+
+	return r.formatted()
+}
+
+func (r *Response) precision() string {
+	return r.Response.GeoObjectCollection.
 		FeatureMember[0].
 		GeoObject.
 		MetaDataProperty.
 		GeocoderMetaData.
 		Precision
-
-	switch precision {
-	case "exact":
-		return PrecisionExact
-	case "number":
-		return PrecisionNumber
-	case "near":
-		return PrecisionNear
-	case "range":
-		return PrecisionRange
-	case "street":
-		return PrecisionStreet
-	default:
-		return PrecisionOther
-	}
 }
 
-func (r *Response) DataType() DataType {
-	kind := r.Response.GeoObjectCollection.
+func (r *Response) kind() string {
+	return r.Response.GeoObjectCollection.
 		FeatureMember[0].
 		GeoObject.
 		MetaDataProperty.
 		GeocoderMetaData.
 		Kind
+}
 
-	switch kind {
-	case "house":
-		return TypeHouse
-	case "street":
-		return TypeStreet
-	case "metro":
-		return TypeMetro
-	case "district":
-		return TypeDistrict
-	case "locality":
-		return TypeLocality
-	case "area":
-		return TypeArea
-	case "province":
-		return TypeProvince
-	case "country":
-		return TypeCountry
-	case "region":
-		return TypeRegion
-	case "hydro":
-		return TypeHydro
-	case "railway_station":
-		return TypeRailwayStation
-	case "station":
-		return TypeStation
-	case "route":
-		return TypeRoute
-	case "vegetation":
-		return TypeVegetation
-	case "airport":
-		return TypeAirport
-	case "entrance":
-		return TypeEntrance
-	default:
-		return TypeOther
-	}
+func (r *Response) suggestion() string {
+	return r.Response.GeoObjectCollection.
+		MetaDataProperty.
+		GeocoderResponseMetaData.
+		Suggest
+}
+
+func (r *Response) pos() string {
+	return r.Response.GeoObjectCollection.
+		FeatureMember[0].
+		GeoObject.
+		Point.
+		Pos
+}
+
+func (r *Response) formatted() string {
+	return r.Response.GeoObjectCollection.
+		FeatureMember[0].
+		GeoObject.
+		MetaDataProperty.
+		GeocoderMetaData.
+		Address.
+		Formatted
 }

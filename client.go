@@ -15,7 +15,7 @@ func NewClient() *Client {
 }
 
 func (client *Client) Search(params *SearchParams) (*Response, error) {
-	url := fmt.Sprintf("%s?apikey=%s&geocode=%s&format=%s&lang=%s&results=%s",
+	preparedURL := fmt.Sprintf("%s?apikey=%s&geocode=%s&format=%s&lang=%s&results=%s",
 		baseURL,
 		url.QueryEscape(params.ApiKey),
 		url.QueryEscape(params.Geocode),
@@ -23,7 +23,7 @@ func (client *Client) Search(params *SearchParams) (*Response, error) {
 		url.QueryEscape(language),
 		url.QueryEscape(count))
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(preparedURL)
 
 	if err != nil {
 		return nil, err
