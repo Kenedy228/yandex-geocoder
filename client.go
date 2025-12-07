@@ -18,7 +18,7 @@ func (client *Client) Search(params *SearchParams) (*Response, error) {
 	preparedURL := fmt.Sprintf("%s?apikey=%s&geocode=%s&format=%s&lang=%s&results=%s",
 		baseURL,
 		url.QueryEscape(params.ApiKey),
-		url.QueryEscape(params.Geocode),
+		url.QueryEscape(params.Address.toGeocode()),
 		url.QueryEscape(format),
 		url.QueryEscape(language),
 		url.QueryEscape(count))
@@ -53,5 +53,6 @@ func (client *Client) Search(params *SearchParams) (*Response, error) {
 		return nil, ErrUnsopportedData
 	}
 
+	data.params = params
 	return &data, nil
 }

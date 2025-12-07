@@ -1,6 +1,6 @@
 package geocoder
 
 type SearchParams struct {
-	ApiKey   string
-	Geocode  string
+	ApiKey  string
+	Address Address
 }

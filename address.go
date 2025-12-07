@@ -12,7 +12,7 @@ type Address struct {
 	House    string
 }
 
-func (a *Address) ToGeocode() string {
+func (a *Address) toGeocode() string {
 	return fmt.Sprintf("%s, %s, %s, %s, %s",
 		a.Country,
 		a.District,

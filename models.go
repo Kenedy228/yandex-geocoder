@@ -6,6 +6,7 @@ import (
 )
 
 type Response struct {
+	params   *SearchParams
 	Response struct {
 		GeoObjectCollection struct {
 			MetaDataProperty struct {
@@ -13,9 +14,9 @@ type Response struct {
 					Request string `json:"request"`
 					Found   string `json:"found"`
 					Results string `json:"results"`
-					Fix     string `json:"fix,omitempty"`
-					Suggest string `json:"suggest,omitempty"`
-					Skip    string `json:"skip,omitempty"`
+					Fix     string `json:"fix"`
+					Suggest string `json:"suggest"`
+					Skip    string `json:"skip"`
 				} `json:"GeocoderResponseMetaData"`
 			} `json:"metaDataProperty"`
 			FeatureMember []struct {
@@ -86,6 +87,29 @@ func (r *Response) IsPrecised() bool {
 		return false
 	}
 
+	for _, v := range r.components() {
+		if v.Kind == "street" {
+			split := strings.Split(v.Name, r.params.Address.Street)
+			var sign string
+
+			if split[0] == "" {
+				sign = split[1]
+			} else {
+				sign = split[0]
+			}
+
+			if len(strings.Split(sign, " ")) != 2 {
+				return false
+			}
+		}
+
+		if v.Kind == "house" {
+			if v.Name != r.params.Address.House {
+				return false
+			}
+		}
+	}
+
 	return true
 }
 
@@ -138,4 +162,17 @@ func (r *Response) formatted() string {
 		GeocoderMetaData.
 		Address.
 		Formatted
+}
+
+func (r *Response) components() []struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+} {
+	return r.Response.GeoObjectCollection.
+		FeatureMember[0].
+		GeoObject.
+		MetaDataProperty.
+		GeocoderMetaData.
+		Address.
+		Components
 }
