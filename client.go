@@ -26,19 +26,31 @@ func (client *Client) Search(params *SearchParams) (*Response, error) {
 	resp, err := http.Get(preparedURL)
 
 	if err != nil {
-		return nil, err
+		return nil, ErrInternalServer
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, err
+		if resp.StatusCode == http.StatusBadRequest {
+			return nil, ErrBadParams
+		}
+
+		if resp.StatusCode == http.StatusForbidden {
+			return nil, ErrBadApiKey
+		}
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			return nil, ErrTooManyRequests
+		}
+
+		return nil, ErrInternalApi
 	}
 
 	decoder := json.NewDecoder(resp.Body)
 	var data Response
 
 	if err := decoder.Decode(&data); err != nil {
-		return nil, err
+		return nil, ErrUnsopportedData
 	}
 
 	return &data, nil

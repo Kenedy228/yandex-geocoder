@@ -65,13 +65,13 @@ func (r *Response) Coordinates() (*Coordinates, error) {
 	long, err := strconv.ParseFloat(split[0], 64)
 
 	if err != nil {
-		return nil, err
+		return nil, ErrUnsopportedData
 	}
 
 	lat, err := strconv.ParseFloat(split[1], 64)
 
 	if err != nil {
-		return nil, err
+		return nil, ErrUnsopportedData
 	}
 
 	return &Coordinates{Latitude: lat, Longitude: long}, nil
